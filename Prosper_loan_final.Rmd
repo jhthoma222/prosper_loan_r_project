@@ -1,0 +1,462 @@
+Prosper Loans Data Exploration by Joseph Thoma
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+library(ggplot2)
+library(knitr) 
+library(ggthemes) 
+library(gridExtra) 
+library(dplyr)
+library(tidyr) 
+library(scales)
+library(GGally)
+
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+setwd("D:/Desktop/WGU Projects/data_analyst_nanodegree/data_Analysis_with_R/Final Project")
+pl <- read.csv('prosperLoanData.csv')
+```
+
+> **Introduction**: This data set contains 113,937 loans with 81 variables on each loan, 
+including loan amount, borrower rate (or interest rate), current loan status, borrower income, 
+borrower employment status, borrower credit history, and the latest payment information.
+
+# Exploring the Data
+
+```{r echo=FALSE, Explore_The_data}
+#Want to get basic information about this dataset.
+str(pl)
+
+```
+
+```{r echo=FALSE, Explore_The_Data}
+
+names(pl)
+```
+
+# Univariate Plots Section
+
+## Going to start by exploring the Borrower data.
+
+```{r echo=FALSE}
+
+# 1.  Borrowers by State
+
+ggplot(data = pl, aes(x = BorrowerState)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+```
+
+Which state has the most borrowers?  California exceeds the rest of the states with 14,717 loans.
+
+
+```{r echo=FALSE}
+# 2.  Emplotment Status by Borrower
+
+ggplot(data = pl, aes(x = EmploymentStatus)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+What is the Employment Status of Borrowers?  We see that most borrowers are employed. 
+(I did notice that there is 'Employed' then there is 'Full-Time' and 'Part-Time'.)
+
+```{r echo=FALSE}
+# 3.  Homeowner per Borrower
+
+ggplot(data = pl, aes(x = IsBorrowerHomeowner)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1)
+
+```
+
+Are most borrowers homeowners?  This is pretty even except there are more borrowers that are homeowners.
+
+```{r echo=FALSE}
+# 4. Income Range of Borrower
+
+ggplot(data = pl, aes(x = IncomeRange)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+What is the most common income range amoungst borrowers?  Most incomes are within the range of '$25,000 - $74,999'
+I did noticed that these categories can be organized better.
+
+```{r echo=FALSE}
+# 5. Propser Rating of Borrower
+
+ggplot(data = pl, aes(x = ProsperRating..Alpha.)) +
+  geom_bar(stat = 'count') +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1)
+```
+
+What is the most common Prosper Alpha rating amoungst borrowers?  We see that most borrowers did not have a rating. 
+However, we see 'C' is the most popular rating for those who have been rated
+
+```{r echo=FALSE}
+# 6. Debt to Income Ratio of Borrower
+
+ggplot(aes( x = DebtToIncomeRatio ), data = subset(pl, !is.na(DebtToIncomeRatio))) +
+  geom_histogram(binwidth = .25)  + 
+  scale_y_log10() +
+  scale_x_continuous(breaks = seq(0,10,1))
+```
+
+We see that most of the borrowers have a low debt to income ratio.
+
+
+## Next I am going to look at Loan Data
+```{r echo=FALSE}
+# 1. Loan Amount
+
+ggplot(data = pl, aes(x = LoanOriginalAmount)) +
+  geom_histogram ()
+  stat_bin(bins = 1000)
+```
+
+What is the most popular loan amount?  We see that most loans are under $15,000.
+With the majority of loans are $4000.
+
+```{r echo=FALSE}
+#2. Loan terms
+
+ggplot(data = pl, aes(x = Term)) +
+  geom_bar() +
+  stat_bin(bins = 10) +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1)
+```
+
+What are the terms of the loans?  Most loans are 36 months.
+
+```{r echo=FALSE}
+# 3. Loan Status
+
+ggplot(data = pl, aes(x = LoanStatus)) +
+  geom_bar(stat = 'count') +
+  geom_text(stat = 'count', aes(label = ..count..), size = 3, vjust = -1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+What is the count of each loan status?  Most loans are in the 'current' status.
+
+
+```{r echo=FALSE}
+# 4. Loans per year
+pl$LoanOriginationYear <- substring(pl$LoanOriginationDate, 0, 4)
+
+ggplot(aes(x = LoanOriginationYear), data = pl) +
+  geom_bar() + 
+  geom_text( stat = 'count', aes(label = ..count..), size = 3, vjust = -1)
+```
+
+How many loans issued per year?  We see that 2013 had the most loans.
+Noticed a large dip in 2009.  (Wonder why the dip in 2019?)
+
+```{r echo=FALSE}
+# 5. Lender Yield
+#https://www.investopedia.com/ask/answers/09/difference-between-yields-and-interest-rate.asp
+
+ggplot(data = pl, aes(x=LenderYield)) + 
+  geom_histogram()
+```
+
+```{r echo=FALSE}
+# 6. Credit Score
+
+#Credit SCore Lower
+p1 <- ggplot(data = pl, aes(x=CreditScoreRangeLower)) +
+        geom_histogram(binwidth = 10) +
+        scale_x_continuous(limits = c(400,900))
+
+#Credit Score Upper
+p2 <- ggplot(data = pl, aes(x=CreditScoreRangeUpper)) +
+        geom_histogram(binwidth = 10) +
+        scale_x_continuous(limits = c(400,900))
+
+grid.arrange(p1, p2, ncol=2)
+
+```
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+This is a large dataset which consists of 81 variables, with 113937 observations. 
+This Dataset is about Prosper Loans from 2005 through 2014.
+
+
+### What is/are the main feature(s) of interest in your dataset?
+I broke down this dataset in two main parts.  Borrowers and Loans.
+
+Borrowers - Most borrowers are from California and made betweend $25k and 75k.  Most borrowers are employed.  It was almost and even split whether borrowers owned their own home or not.  Most borrowers had a good debt to Income ratio.
+
+Loans - Most loans were under $15,00o and at 36 month term. Most loans were in good standing.  Between 2005 and 2014, 2013 had the most loans issued.  There was also a big decline in loans in 2009.
+
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+I will like to dig a little deeper in 'Prosper Rating'.
+
+
+### Did you create any new variables from existing variables in the dataset?
+I created 'LoanOriginationYear' out of 'LoanOriginationDate'.
+
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+I noticed that withing the 'Employment status' that there were the following categories, 'Employed', 'Full Time', and 'Part Time'.  These three seem to be the same and probably can be combined.
+
+I also noticed that in the Prosper Rating that there were a lot of nulls.
+
+
+
+# Bivariate Plots Section
+
+```{r echo=FALSE}
+# Correlation Matrix
+# https://www.rdocumentation.org/packages/ggiraphExtra/versions/0.2.9/topics/ggCor
+ggcorr(pl, label = 1, label_size = 2,
+       hjust = 0.8, size = 2, color = "black", layout.exp = 2)
+``` 
+ 
+
+```{r echo=FALSE}
+# 1. Prosper Rating vs. Loan Amount
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = LoanOriginalAmount)) +
+ geom_boxplot()
+```
+
+We can see that loan amounts decrease as the Prosper Rating worsens.
+
+```{r echo=FALSE}
+# 2. Prosper Rating vs. Borrower rate
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = BorrowerRate)) +
+ geom_boxplot()
+```
+
+As expected, we see that the borrower Rate increases as the Prosper Rating Worsens.
+
+```{r echo=FALSE, Bivariate_Plots}
+
+# 3. Credit Score Lower vs. Borrower rate
+ggplot(data = pl, aes(x = CreditScoreRangeLower, y = BorrowerRate)) +
+ geom_point(alpha=1/10,position = position_jitter()) +
+ scale_x_continuous(limits=c(400,900))+
+ scale_y_continuous(limits=c(0.0,0.4))
+
+```
+
+As expected, we see that the borrower Rate decreases as the Credit Score improves.
+
+
+```{r echo=FALSE}
+# 4. Prosper Rating vs. Borrower APR
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = BorrowerAPR)) +
+ geom_boxplot()
+```
+
+```{r echo=FALSE}
+# 5. Prosper Rating vs. Monthly Income
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = StatedMonthlyIncome)) +
+  geom_boxplot() +
+  coord_cartesian(ylim = c(0,10000))
+```
+
+We see a small increase in the prosper rating as the Monthly Income Increases.
+
+```{r echo=FALSE}
+#6. Prosper Rating vs Credit SCore Upper
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = CreditScoreRangeUpper )) +
+  geom_boxplot()
+```
+
+As expected a higher credit score tends to have a higher Prosper rating
+
+```{r echo=FALSE}
+# 7. Prosper Rating vs Homeowner 
+ggplot(data = pl, aes(x = ProsperRating..Alpha., fill = IsBorrowerHomeowner)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values=c("#333333", "#bfbfbf"))
+```
+
+```{r echo=FALSE}
+# 8. Loan Amount vs Loan Year
+pl$LoanOriginationYear <- substring(pl$LoanOriginationDate, 0, 4)
+ggplot(data = pl, aes(x = LoanOriginationYear , y = LoanOriginalAmount)) +
+  geom_boxplot()
+```
+
+Loans Amounts have been increasing after 2009, but 2013 and 2014 has leveled out.
+
+```{r echo=FALSE}
+# 9. Employment Status vs Loan Amount
+ggplot(data = pl, aes(x = EmploymentStatus , y = LoanOriginalAmount)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+As expected borrowers who are employed qualify for larger loan amounts.
+
+# Bivariate Analysis
+
+
+### Talk about some of the relationships you observed in this part of the investigation. 
+### How did the feature(s) of interest vary with other features in the dataset?
+I decided to explore the Prosper Ratings and try to find the relations that might influence the Prosper Rating.
+
+I noticed that as the Propser Rating worsened the Loan Amounts decreased, the Borrower Rate increased.  I did not find much of a relationship between monthly income and the prosper rating.
+
+I also noticed that the borrower rate is correlated with the CreditScore. The higher the credit score the lower the interest rate the borrower gets. 
+
+
+### What was the strongest relationship you found?
+The strongest relationship I found between the Borrower Rate and the Credit Score and also the Borrower Rate and the Propser Rating.
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE}
+#1. Credit Score Lower vs. Borrower Rate vs. Propser Rating
+ggplot(data = pl, aes(x=CreditScoreRangeLower,y=BorrowerRate,color=ProsperRating..Alpha.)) +
+  geom_point(alpha=1/10,position = position_jitter()) +
+  scale_x_continuous(limits=c(400,900))+
+  scale_y_continuous(limits=c(0.0,0.4))
+
+```
+
+Continues to show the relationship between these 3 variables.
+
+
+
+```{r echo=FALSE, Multivariate_Plots}
+#2. Loan Amount vs Monthly Income vs Prosper Rating
+ggplot(data = pl, aes(x = LoanOriginalAmount, y = StatedMonthlyIncome, color = ProsperRating..Alpha.)) +
+  geom_point() +
+    coord_cartesian(xlim = c(0, 35000)) +
+    coord_cartesian(ylim = c(0, 200000))
+```
+
+First thing I notice is that only borrowers with top Prosper Ratings will get qualified for a loan larger that 25k.
+
+
+```{r echo=FALSE}
+#3. Lender Yield vs Monthly Income vs Prosper Rating
+ggplot(data = pl, aes(x = LenderYield, y = StatedMonthlyIncome, color = ProsperRating..Alpha.)) +
+  geom_point(alpha = 0.5, position = position_jitter(h=0)) +
+    coord_cartesian(ylim = c(0, 50000))   
+```
+
+Monthly income of the borrower doesn't seem to have much of a relation with the rating.
+
+
+```{r echo=FALSE}
+# 4. LoanOriginalAmount vs BorrowerRate vs ProsperRating
+ggplot(data = pl, aes(x = LoanOriginalAmount, y = BorrowerRate, color = ProsperRating..Alpha.)) + 
+  geom_point(alpha = 0.5)
+```
+
+Continue to see that Prosper rating is a good predictor for the borrower rate. 
+
+```{r echo=FALSE}
+# 5. Borrower Rate vs Prosper Rating vs Employment Status
+# https://stackoverflow.com/questions/42030624/geom-tile-single-color-as-0-then-color-scale
+
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = EmploymentStatus, fill = BorrowerRate)) +
+  geom_tile(stat = "identity") +
+  scale_fill_gradient(low = "green", high = "red")
+```
+
+The heat map shows that highly rated "Not employed" borrowers have to pay slight higher rates. 
+
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+I continue to notice how the borrower rate, Credit Score and Porsper Ratings have a strong relationship.  As the Prosper Rating and Credit Score improves the borrower rate decreases.
+
+
+### Were there any interesting or surprising interactions between features?
+One surprising thing that I noticed  is that only borrowers with top Prosper Ratings will get qualified for a loan larger that 25k.
+
+
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, Plot_One}
+pl$LoanOriginationYear <- substring(pl$LoanOriginationDate, 0, 4)
+
+ggplot(aes(x = LoanOriginationYear), data = pl) +
+  geom_bar(fill = "#0040ff") + 
+  geom_text( stat = 'count', aes(label = ..count..), size = 3, vjust = -1) +
+  ggtitle("Prosper Loans per Year") +
+  xlab("Year") +
+  ylab("Number of Loans")
+```
+
+### Description One
+This bar graph grabbed my attention from the very beginning.  I saw a sudden decrease in 2009 and was quickly curious to what caused that large drop.  After researching the internet, I came to understand the period of October 15, 2008 to July 13, 2009 is Prosper's QuietSEC Period, from which they are suspended for lending activities upon SEC approval. Prosper relaunched in July 2009. (https://en.wikipedia.org/wiki/Prosper_Marketplace#2009_post_SEC_relaunch)
+
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(data = pl, aes(x = ProsperRating..Alpha., y = BorrowerRate, color = ProsperRating..Alpha., fill = ProsperRating..Alpha. )) +
+ geom_boxplot(color="black") +
+ ggtitle("Prosper Rating vs. Borrower Rate") +
+ xlab("Prosper Rating") +
+ ylab("Borrower Rate")
+
+```
+
+### Description Two
+As expected, we see that the borrower Rate increases as the Prosper Rating Worsens. Borrowers who do not have good history have worse Prosper Ratings, therefore, are higher risk and will have a higher borrower rate.
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(data = pl, aes(x = LoanOriginalAmount, y = StatedMonthlyIncome, color = ProsperRating..Alpha.)) +
+  geom_point() +
+    coord_cartesian(xlim = c(0, 35000)) +
+    coord_cartesian(ylim = c(0, 200000)) +
+  ggtitle("Monthly Income vs. Loan Amount vs. Prosper rating") +
+  xlab("Loan Amount") +
+  ylab("Monthly Income (Borrower)")
+```
+
+### Description Three
+For the most part, borrowers with top Prosper Ratings will get qualified for a loan larger that 25k.  Same as above, borrowers with worse Prosper Ratings are more of a risk.  Prosper Loans must limit the amount of the loan for 'risky' borrrowers.
+
+------
+
+# Reflection
+
+This was a large dataset about Loans that I do not have much personal experience.  I just started exploring this 
+dataset randomly at first to get a feel for this dataset.  My first explorations I broke the dataset down into two 
+groupings, borrowers and loans.  I continutied the exploratory data analysis and I decided to focus more on Prosper 
+Ratings and what kind of relationships were attached to that rating. I then continued to provide examples of how 
+Borrower rate, Prosper Rating and Credit SCore had a strong relationship.
+
+There is so much more that can be analyzed in this data set, and so many exploratory paths you could go down.  One 
+idea for more exploration I have is to learn more about delinquent loans and all of the relationships with that
+scenario.
