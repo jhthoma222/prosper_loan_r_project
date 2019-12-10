@@ -453,7 +453,7 @@ For the most part, borrowers with top Prosper Ratings will get qualified for a l
 
 This was a large dataset about Loans that I do not have much personal experience.  I just started exploring this 
 dataset randomly at first to get a feel for this dataset.  My first explorations I broke the dataset down into two 
-groupings, borrowers and loans.  I continutied the exploratory data analysis and I decided to focus more on Prosper 
+groupings, borrowers and loans.  I continued the exploratory data analysis and I decided to focus more on Prosper 
 Ratings and what kind of relationships were attached to that rating. I then continued to provide examples of how 
 Borrower rate, Prosper Rating and Credit SCore had a strong relationship.
 
